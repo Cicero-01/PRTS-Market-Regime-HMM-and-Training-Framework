@@ -23,7 +23,7 @@ Furthermore, provided that the data adheres to the `PELOS` standardized naming s
 ```
 ├──PRTS_train.py               # run this file / 运行这个
 ├──feature_store.csv           # (necessary) training data / 必须传入训练数据
-├──PRTS_utilize.py             # Utilize trained model / 调用成熟模型
+├──PRTS_inference.py           # Utilize trained model / 调用成熟模型
 	├──PRTS_hmm.pkl
 	├──PRTS_mapping.pkl        # (generated) model files / 生成的三个模型权重文件
 	└──PRTS_scaler.pkl             
@@ -31,7 +31,19 @@ Furthermore, provided that the data adheres to the `PELOS` standardized naming s
 ```
 ### 2.1 训练 Train
 
+运行`PRTS_train.py`训练模型。训练完成后会自动生成三个模型权重文件。训练脚本默认读取的文件名为`feature_store.csv`，研究者也可以将`df = pd.read_csv("feature_store.csv")`语句中的文件名修改成自己的文件名。
+
+Run script `PRTS_train.py` to train the model. 3 model weight files will be generated after training. The script recognizes the file with name `feature_store.csv` as input in default setting. And researcher can replace the filename in `df = pd.read_csv("feature_store.csv")` with thier own filename for recognition.
+
 ### 2.2 调用模型 Utilize trained model
+
+我们提供了一个简单的实盘调用示例`PRTS_inference.py`，展示如何通过训练得到的权重文件读取新数据进行状态分类，并输出最新一天所在的状态。此外，研究者可以根据自己的需求调用模型文件实现更多功能。
+
+We provide a simple scripy `PRTS_inference.py` of Live Inference as an example, which shows how to utilize the model files to process new data and output the state of the last day. Researcher can utilize the model file to achieve more functions according to their needs.
+
+需要注意，传入的`hmm_featurestore.csv`至少有30行数据，因为模型默认的`context_length=30`。此外调用模型时，变量`FEATURES`中**因子名称和顺序要和训练时一致**。
+
+Notably, the `hmm_featurestore.csv` must cotain more than 30 lines of data as the default `context_length=30`. In variable `FEATURES`, **the factor's name and order ought to be the same as its form in training**.
 
 ## 3.如何使用自己的数据 How to use your own data
 

@@ -3,32 +3,57 @@ HMM (Hidden Markov Model) is an unsupervised machine learning algorithm. It infe
 
 ## 1.引言 Introduction
 
-先前的研究发现，由于窗口大小和自带的滞后性，基于极值的简单分形算法无法复现人类感知中的趋势[[1]](https://github.com/Cicero-01/Kaltsit-Swing-Fractal-Regime-Detector#%E5%B1%80%E9%99%90%E4%B8%8E%E8%AE%A8%E8%AE%BA--limitations-and-discussion)。而人工制定更复杂的分类规则又会不可避免地陷入逻辑死板甚至过拟合的问题，而且分类结果的质量好坏也一定程度上与研究者主观判断和准确水平相关。相比之下，**机器学习（Machine Learning）** 作为一种让算法从数据自己学习规律的方式，则能较好地解决。
+先前的研究发现，由于窗口大小和自带的滞后性，基于极值的简单分形算法无法复现人类感知中的趋势[[1]](https://github.com/Cicero-01/Kaltsit-Swing-Fractal-Regime-Detector#%E5%B1%80%E9%99%90%E4%B8%8E%E8%AE%A8%E8%AE%BA--limitations-and-discussion)。而人工制定更复杂的分类规则又会不可避免地陷入逻辑死板甚至过拟合的问题，而且分类结果的质量好坏也一定程度上与研究者主观判断水平和标签质量相关。相比之下，**机器学习（Machine Learning）** 作为一种让算法从数据自己学习规律的方式，则能较好地解决相应问题。
 
-Our previous research finds that the simple fractal alogirthms based on extrema cannot be equated with the macroscopic "major trends" perceived by the human eye[[1]](https://github.com/Cicero-01/Kaltsit-Swing-Fractal-Regime-Detector#%E5%B1%80%E9%99%90%E4%B8%8E%E8%AE%A8%E8%AE%BA--limitations-and-discussion). 
+Our previous research finds that the simple fractal alogirthms based on extrema cannot be equated with the macroscopic "major trends" perceived by the human eye[[1]](https://github.com/Cicero-01/Kaltsit-Swing-Fractal-Regime-Detector#%E5%B1%80%E9%99%90%E4%B8%8E%E8%AE%A8%E8%AE%BA--limitations-and-discussion). Conversely, manually designing more complex classification rules inevitably leads to rigid logic or even over-fitting problem. Moreover, the quality of such classification heavily depends on the researcher's subjective judgment and the quality of manual labels. In contrast, **Machine Learning (ML)**, which empowers algorithms to discover patterns autonomously from data, offers a solution to these challenges.
 
 我们认为，市场状态分类本质上可以看作一个聚类问题（Clustering），因此天然适合采用**无监督学习（Unsupervised Learning）** 的方式进行研究。无监督学习中，机器只负责寻找数据的数学聚集特征，而**训练者仅通过控制输入的因子类型来决定最终状态的金融学意义，并不需要手动为数据打上标签**，这种方式比起监督学习能更好地避免人类交易员对于市场的主观判断对结果造成的影响。
 
+We argue that market regime classification is fundamentally a Clustering problem, making it inherently suitable for **Unsupervised Learning**. In unsupervised learning, the machine focuses solely on identifying mathematical clustering characteristics within the data. **The researcher dictates the financial meaning of the final states exclusively by controlling the types of input factors, completely bypassing the need for manual labeling**. Compared to supervised learning, this approach effectively eliminates the biases introduced by human traders' subjective market judgments.
+
 基于这种思想，我们使用**隐马尔可夫模型（Hidden Markov Model, HMM）** 这一种经典的无监督学习算法构建了一个市场状态分类工具`PRTS`，并开发了配套的训练框架。隐马尔可夫模型的原理可以简单解释为：**HMM通过可观测的值推断背后的隐藏状态，并计算不同状态间转换的概率**。在具体的训练框架中，技术指标和因子（如成交量、K线价格数据、均线和其他因子）作为人类交易员可以观测的表象被输入模型，而市场的状态（多头/空头、趋势/震荡）作为我们希望推知的隐藏状态被模型输出；通过调用训练完成的模型，研究者也可以得到某一时间点市场所处状态。
+
+Based on this philosophy, we developed `PRTS`, a market regime classification tool and its accompanying training framework, leveraging the **Hidden Markov Model (HMM)**—a classic unsupervised learning algorithm. The underlying principle of HMM can be summarized simply: **it infers the underlying hidden states through observable values and calculates the transition probabilities between these states**. Within our specific training framework, technical indicators and factors (e.g., volume, OHLC price data, moving averages) serve as the "observable representations" input into the model. In turn, the market regimes (e.g., Bull/Bear, Trend/Chaos) are output as the "hidden states" we expect to deduce. By utilizing the trained model, researchers can seamlessly pinpoint the specific market state at any given time step.
 
 此外，只需数据遵循标准命名格式`PELOS`，`PRTS`**及其配套的训练框架能支持将不定数量的自定义因子作为输入，并手动划分输出状态的数量**，具有较高的通用性。HMM的训练通过`hmmlearn`包完成调用，对训练者的数学背景、Python能力亦没有较高要求。此外，HMM可以依赖CPU完成训练，相比于需要GPU算力的神经网络对个人研究者更为友好。
 
+Furthermore, provided that the data adheres to the `PELOS` standardized naming schemas, `PRTS` and its training framework can accept an arbitrary number of custom input factors and allow users to manually define the number of output states, ensuring exceptional versatility. The HMM training is executed via the `hmmlearn` library, imposing minimal requirements on the user's mathematical background or Python proficiency. Additionally, unlike neural networks that demand heavy GPU computation, HMM can be trained efficiently on CPU, making it accessible and friendly for independent researchers.
+
 ## 2.如何开始 Quick Start
 ```
-├──Main.py               # run this file / 运行这个
-├──feature_store.csv     # necessary / 必须
-└── results/             # Strategy results / 策略结果文件夹 
+├──PRTS_train.py               # run this file / 运行这个
+├──feature_store.csv           # (necessary) training data / 必须传入训练数据
+├──PRTS_utilize.py             # Utilize trained model / 调用成熟模型
+	├──PRTS_hmm.pkl
+	├──PRTS_mapping.pkl        # (generated) model files / 生成的三个模型权重文件
+	└──PRTS_scaler.pkl             
 	
 ```
 ### 2.1 训练 Train
 
-### 2.2 调用模型 
+### 2.2 调用模型 Utilize trained model
 
 ## 3.如何使用自己的数据 How to use your own data
 
-**因子数与分类状态数**
+**3.1 因子数与分类状态数 / Factors and State**
+模型训练的因子列名和数量、语义锚定因子、状态数可以通过修改`PRTS_train.py`开头的全局变量进行自定义。
+```
+FEATURES = ['Factor_A', 'Factor_B']
+SEMANTIC_ANCHOR_IDX = 1
+N_STATES = 2
+SEMANTIC_LABELS = {0: 'Chaos', 1: 'Order'}
+```
+**因子名称 / Factor Name:** 用具体的因子名称替换`Factor_A`和`Factor_B`
 
-**收敛形式**
+**因子数量 / Factor Number:** 直接在FEATURES = []中继续添加
+
+**状态锚定特征 / State Anchored Feature:**
+
+**状态数 / State Number:** 修改`N_STATES`的值，同时修改`SEMANTIC_LABELS`中的语义
+
+**3.2 协方差形式 / Covariance Type**
+`PRTS`的默认协方差形式为对角协方差(Diagonal)。如需使用全协方差，需要在`PRTS_train.py`的`get_frozen_regime_history()`函数中的`model = hmm.GaussianHMM()`语句，手动将`covariance_type="diag"`修改为`covariance_type="full"`。
+
 
 
 ## 4.训练诊断与性能评估 Diagnostics & Performance
@@ -47,7 +72,7 @@ To validate the stability and clustering efficacy of training, a visualization f
  
 ### 解读诊断报告 Understanding the Diagnostics
 
-**4.1 Top-left: 状态转移概率矩阵 Transition Probability Matrix** 
+**4.1 Top-left: 状态转移概率矩阵 /Transition Probability Matrix** 
 
 该矩阵(Fig 1.a)揭示了市场状态的马尔可夫记忆性(Markovian Memory)。图中每一行代表“当前状态”，每一列代表“下一个状态”，数值分别代表HMM分类出的状态**继续保持当前状态和切换至其他状态的概率**。
 
@@ -57,7 +82,7 @@ This matrix (Fig 1.a) reveals the Markovian Memory of market states. Each line r
 
 In our example, the states `Chaos` and `Order` respectively hold a posibility of 95.38% and 93.73% to persist, which indicates `PRTS` successfully captures market inertia. The classified market regimes exhibit strong "stickiness" ——once formed, they tend to sustain for a period, effectively mitigating the "state flickering" issue.
 
-**4.2 Top-right: EM收敛曲线 EM Convergence Log-Likelihood**
+**4.2 Top-right: EM收敛曲线 /EM Convergence Log-Likelihood**
 
 收敛曲线(Fig 1.b)展示期望最大化(Expectation-Maximization)算法在**训练迭代过程中的优化效率**。横轴是迭代次数，纵轴是对数似然。EM算法每迭代一次，都会尝试让似然值更高。
 
@@ -67,7 +92,7 @@ The convergence curve (Fig 1.b) **demonstrates the optimization efficiency of th
 
 In this example, after a rapid initial ascent, the curve essentially flattens and converges around the 10th iteration, with no violent oscillations or drops thereafter. This suggests that the structure of the sample data is relatively clean, allowing the model to find the optimal solution swiftly and stably.
 
-**4.3 Bottom-Left: 特征发射分布密度图 Emission Distribution by State**
+**4.3 Bottom-Left: 特征发射分布密度图 /Emission Distribution by State**
 
 特征发射分布密度图(Fig 1.c)体现了不同状态在锚定特征上的分布密度，**展示了模型是如何根据指定的锚定因子在物理层面切割市场的**。
 
@@ -81,7 +106,7 @@ In the training data, the feature is anchored to factor`Kaufman_Efficiency`. The
 
 Notably, there is an overlapping region between approximately 0.25 and 0.35 where both states coexist. This implies that while `Kaufman_Efficiency` is effective as an anchoring feature, it is not a perfect separation criterion.
 
-**4.4 Bottom-right: State 1后验概率曲线 Posterior Probability of State 1**
+**4.4 Bottom-right: State 1后验概率曲线 /Posterior Probability of State 1**
 
 后验概率曲线(Fig 1.d)是一张**很重要的图，衡量了模型对当前市场状态推断的置信度(Confidence)**。
 

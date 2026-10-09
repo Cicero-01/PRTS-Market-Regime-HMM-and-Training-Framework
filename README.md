@@ -36,25 +36,56 @@ Furthermore, provided that the data adheres to the `PELOS` standardized naming s
 ## 3.如何使用自己的数据 How to use your own data
 
 **3.1 因子数与分类状态数 / Factors and State**
+
 模型训练的因子列名和数量、语义锚定因子、状态数可以通过修改`PRTS_train.py`开头的全局变量进行自定义。
+
+Users can custom input factors, numbers of output state, anchor, sematic labels of state by adjusting several global variable at the beginning of `PRTS_train.py`.
+
 ```
 FEATURES = ['Factor_A', 'Factor_B']
 SEMANTIC_ANCHOR_IDX = 1
 N_STATES = 2
 SEMANTIC_LABELS = {0: 'Chaos', 1: 'Order'}
 ```
-**因子名称 / Factor Name:** 用具体的因子名称替换`Factor_A`和`Factor_B`
 
-**因子数量 / Factor Number:** 直接在FEATURES = []中继续添加
+**输入因子名称 / Input Factor Name:** 
 
-**状态锚定特征 / State Anchored Feature:**
+用具体的因子名称替换`Factor_A`和`Factor_B`，确保传入的`feature_store.csv`文件中有对应列名。
 
-**状态数 / State Number:** 修改`N_STATES`的值，同时修改`SEMANTIC_LABELS`中的语义
+Replace `Factor_A` and `Factor_B` with the specific names of factors you want to input. Ensure the same column names exist in `feature_store.csv` file.
+
+**输入因子数量 / Input Factor Number:** 
+
+直接在FEATURES = []中继续添加即可，如`['Factor_A', 'Factor_B', 'Factor_C']`。
+
+To add more factors as input, just continue adding in the "[]", such as `['Factor_A', 'Factor_B', 'Factor_C']`.
+
+**输出状态锚定特征 / Output State Anchored Feature:**
+
+HMM分类出的状态的锚定由`SEMANTIC_ANCHOR_IDX`变量控制，**默认锚定传入的第二个因子**，并将值更高的状态定义为`State 1`(升序)。如需改为锚定第一个因子，只需修改为`SEMANTIC_ANCHOR_IDX = 0`。
+
+The variable `SEMANTIC_ANCHOR_IDX` determines which factor the output state is anchored to. **In default setting, the anchor is the second factor** and state with higher factor value is defined as `State 1`(ascending). To anchor the state to the first factor, modifying the variable as `SEMANTIC_ANCHOR_IDX = 0`.
+
+**输出状态数 / Output State Number:** 
+
+修改`N_STATES`的值，同时修改`SEMANTIC_LABELS`中的语义标签已控制输出状态数。确保状态数和标签数对应，例如：
+
+The number of output state could be changed by adjusting the value of `N_State` and the label in `SEMANTIC_LABELS`. Ensure each state has its corresponding label. For exaample: 
+
+```
+N_STATES = 3
+SEMANTIC_LABELS = {0: 'Chaos', 1: 'Trend_Up', 2: 'Trend_Down'}
+```
 
 **3.2 协方差形式 / Covariance Type**
-`PRTS`的默认协方差形式为对角协方差(Diagonal)。如需使用全协方差，需要在`PRTS_train.py`的`get_frozen_regime_history()`函数中的`model = hmm.GaussianHMM()`语句，手动将`covariance_type="diag"`修改为`covariance_type="full"`。
 
+`PRTS`的**默认协方差形式为对角协方差(Diagonal)**。如需使用全协方差，需要在`get_frozen_regime_history()`函数中的`model = hmm.GaussianHMM()`语句，手动将`covariance_type="diag"`修改为`covariance_type="full"`。
 
+In default setting, `PRTS` use **Diagonal Covariance** as its covariance type. If you want to use Full Covariance for training, please adjust the `covariance_type` to `"full"` in the `model = hmm.GaussianHMM()` part of function `get_frozen_regime_history()`.
+
+**3.3 标准数据格式 / Standard Data Schemas:**
+
+具体的数据格式请见 / For Standard Data Schemas: [PELOS](https://github.com/Cicero-01/PELOS-Standardized-Data-Schemas)
 
 ## 4.训练诊断与性能评估 Diagnostics & Performance
 
@@ -116,3 +147,8 @@ The posterior probability curve (Fig 1.d) is a crucial chart that **measures the
 
 In the presented data, the probability curve for State 1 (Order) exhibits hard switching between 0 and 1, with very few intermediate values and rarely lingering around the 0.5 (50%) decision boundary. This demonstrates that state determination of `PRTS` is exceptionally decisive and highly confident. The frequency and duration of its state transitions perfectly corroborate the first three panels of Fig 1, which is a direct reflection of the excellent separation in the HMM's emission distributions.
 
+## ⚠️**免责声明 / Disclaimer:** 
+
+本工具仅供研究学习使用，**不构成任何投资或财务建议**。开发者及贡献者对因使用本软件或其中代码所造成的任何直接或间接财务损失，不承担任何法律责任。金融市场交易具有极高风险，请在真实交易前进行充分测试，并自行承担所有风险 (DYOR)。
+
+This project and its tools are provided for educational and research purposes only and **do not constitute financial or investment advice**. The developers and contributors assume no legal responsibility or liability for any direct or indirect financial losses incurred from the use of this software. Trading in financial markets involves significant risk. Always do your own research (DYOR) and test thoroughly before real trading.
